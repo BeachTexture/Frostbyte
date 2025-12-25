@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Environment files (contain secrets)
+.env.local
+.env.production.local
+
+# Debug
+npm-debug.log*
+
+# Vercel
+.vercel
+
+# IDE
+.idea/
+.vscode/
+*.swp
