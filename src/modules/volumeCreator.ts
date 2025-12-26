@@ -17,6 +17,7 @@ import {
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
 import BN from 'bn.js';
 import { logger } from '../utils/logger';
+import { wsManager } from '../api/websocket/events';
 import { SolanaService } from '../services/solanaService';
 import { TransactionService } from '../services/transactionService';
 import {
@@ -250,9 +251,13 @@ export class VolumeCreator implements IVolumeCreator {
         balanceBefore: tokenBalanceBefore,
         balanceAfter: tokenBalanceAfter,
       });
+
+      // Broadcast volume trade event to dashboard
+      wsManager.broadcastVolume(amountSol, signature);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       logger.error('❌ Buy trade failed', { error: errorMsg });
+      wsManager.broadcastError('Volume trade failed', { error: errorMsg });
       throw error;
     }
   }

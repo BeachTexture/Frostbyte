@@ -21,6 +21,7 @@ import {
   PUMP_FUN_EVENT_AUTHORITY,
 } from '../config/constants';
 import { logger } from '../utils/logger';
+import { wsManager } from '../api/websocket/events';
 import {
   FeeCollectorConfig,
   FeeStats,
@@ -189,11 +190,15 @@ export class FeeCollector {
         this.stats.claimCount++;
         this.lastClaimSignature = signature;
 
+        // Broadcast fee collected event to dashboard
+        wsManager.broadcastFeeCollected(feeBalance, signature);
+
         await this.distributeFees(feeBalance);
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       logger.error('Failed to check/claim fees', { error: errorMsg });
+      wsManager.broadcastError('Fee collection failed', { error: errorMsg });
       throw error;
     }
   }
@@ -449,6 +454,9 @@ export class FeeCollector {
     this.treasuryStats.transferCount++;
     this.treasuryStats.lastTransferTime = new Date();
     this.treasuryStats.transferHistory.push(treasuryRecord);
+
+    // Broadcast treasury transfer event to dashboard
+    wsManager.broadcastTreasury(amount, signature);
 
     return signature;
   }

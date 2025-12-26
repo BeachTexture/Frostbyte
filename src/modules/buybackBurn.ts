@@ -22,6 +22,7 @@ import {
 } from '@solana/spl-token';
 import BN from 'bn.js';
 import { logger } from '../utils/logger';
+import { wsManager } from '../api/websocket/events';
 import { SolanaService } from '../services/solanaService';
 import { TransactionService } from '../services/transactionService';
 import {
@@ -168,12 +169,16 @@ export class BuybackBurner implements IBuybackBurner {
         buySignature,
         burnSignature,
       });
+
+      // Broadcast burn event to dashboard
+      wsManager.broadcastBurn(tokensToBurn, amountSol, burnSignature);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       record.error = errorMsg;
       this.stats.burnHistory.push(record);
 
       logger.error('❌ Buyback & burn failed', { error: errorMsg });
+      wsManager.broadcastError('Buyback & burn failed', { error: errorMsg });
       throw error;
     }
   }

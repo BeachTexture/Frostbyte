@@ -14,6 +14,7 @@ import {
 } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, AccountLayout } from '@solana/spl-token';
 import { logger } from '../utils/logger';
+import { wsManager } from '../api/websocket/events';
 import { SolanaService } from '../services/solanaService';
 import { TransactionService } from '../services/transactionService';
 import {
@@ -181,12 +182,16 @@ export class AirdropDistributor implements IAirdropDistributor {
         totalSol: amountSol,
         signatures: signatures.length,
       });
+
+      // Broadcast airdrop event to dashboard
+      wsManager.broadcastAirdrop(amountSol, distribution.length);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       record.error = errorMsg;
       this.stats.distributionHistory.push(record);
 
       logger.error('❌ Airdrop distribution failed', { error: errorMsg });
+      wsManager.broadcastError('Airdrop distribution failed', { error: errorMsg });
       throw error;
     }
   }
